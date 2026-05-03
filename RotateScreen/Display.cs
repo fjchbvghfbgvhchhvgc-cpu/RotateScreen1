@@ -55,20 +55,34 @@ internal static class Display
     public const int DMDO_180     = 2;
     public const int DMDO_270     = 3;
 
-    public static void Toggle()
+    public static int GetOrientation()
+    {
+        var dm = new DEVMODE();
+        dm.dmSize = (short)Marshal.SizeOf(dm);
+        if (EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref dm) == 0) return DMDO_DEFAULT;
+        return dm.dmDisplayOrientation;
+    }
+
+    public static void RotateTo(int target)
     {
         var dm = new DEVMODE();
         dm.dmSize = (short)Marshal.SizeOf(dm);
         if (EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref dm) == 0) return;
+        if (dm.dmDisplayOrientation == target) return;
 
-        int newOrient = (dm.dmDisplayOrientation == DMDO_DEFAULT
-                      || dm.dmDisplayOrientation == DMDO_180)
-                      ? DMDO_90
-                      : DMDO_DEFAULT;
+        bool curPortrait    = dm.dmDisplayOrientation == DMDO_90 || dm.dmDisplayOrientation == DMDO_270;
+        bool targetPortrait = target == DMDO_90 || target == DMDO_270;
+        if (curPortrait != targetPortrait)
+            (dm.dmPelsWidth, dm.dmPelsHeight) = (dm.dmPelsHeight, dm.dmPelsWidth);
 
-        (dm.dmPelsWidth, dm.dmPelsHeight) = (dm.dmPelsHeight, dm.dmPelsWidth);
-        dm.dmDisplayOrientation = newOrient;
-
+        dm.dmDisplayOrientation = target;
         ChangeDisplaySettingsEx(null, ref dm, IntPtr.Zero, CDS_UPDATEREGISTRY, IntPtr.Zero);
+    }
+
+    public static void Toggle()
+    {
+        int cur = GetOrientation();
+        int next = (cur == DMDO_DEFAULT || cur == DMDO_180) ? DMDO_90 : DMDO_DEFAULT;
+        RotateTo(next);
     }
 }

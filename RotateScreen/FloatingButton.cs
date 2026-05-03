@@ -1,12 +1,16 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.Windows.Forms;
 
 namespace RotateScreen;
 
 public class FloatingButton : Form
 {
+    private const double IdleOpacity  = 0.55;
+    private const double HoverOpacity = 0.90;
+
     private Point _dragStart;
     private bool _dragging;
     private bool _moved;
@@ -16,8 +20,9 @@ public class FloatingButton : Form
         FormBorderStyle = FormBorderStyle.None;
         TopMost = true;
         ShowInTaskbar = false;
-        BackColor = Color.FromArgb(0, 102, 204);
-        Size = new Size(64, 64);
+        BackColor = Color.Black;
+        Size = new Size(46, 46);
+        Opacity = IdleOpacity;
         DoubleBuffered = true;
         StartPosition = FormStartPosition.Manual;
 
@@ -28,39 +33,30 @@ public class FloatingButton : Form
         path.AddEllipse(0, 0, Width, Height);
         Region = new Region(path);
 
-        var menu = new ContextMenuStrip();
-        menu.Items.Add("旋转屏幕 / Rotate", null, (_, _) => Display.Toggle());
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("退出 / Exit", null, (_, _) => Application.Exit());
-        ContextMenuStrip = menu;
+        MouseEnter += (_, _) => Opacity = HoverOpacity;
+        MouseLeave += (_, _) => { if (!_dragging) Opacity = IdleOpacity; };
     }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+        g.TextRenderingHint = TextRenderingHint.AntiAlias;
 
         var rect = new Rectangle(0, 0, Width, Height);
-        using (var body = new LinearGradientBrush(rect,
-                   Color.FromArgb(0, 153, 255),
-                   Color.FromArgb(0, 92, 184),
-                   90f))
-        {
-            g.FillEllipse(body, rect);
-        }
 
-        using (var ring = new Pen(Color.FromArgb(220, 255, 255, 255), 2f))
-        {
-            g.DrawEllipse(ring, 1, 1, Width - 2, Height - 2);
-        }
+        using (var bg = new SolidBrush(Color.FromArgb(36, 36, 36)))
+            g.FillEllipse(bg, rect);
 
-        using var font = new Font("Segoe UI Symbol", 30f, FontStyle.Bold, GraphicsUnit.Pixel);
-        var glyph = "⟳";
+        using (var ring = new Pen(Color.FromArgb(180, 255, 255, 255), 1.4f))
+            g.DrawEllipse(ring, 1, 1, Width - 3, Height - 3);
+
+        using var font = new Font("Segoe UI Symbol", 24f, FontStyle.Bold, GraphicsUnit.Pixel);
+        const string glyph = "⟳";
         var sz = g.MeasureString(glyph, font);
         using var text = new SolidBrush(Color.White);
         g.DrawString(glyph, font, text,
-            (Width - sz.Width) / 2f,
+            (Width  - sz.Width)  / 2f,
             (Height - sz.Height) / 2f - 1);
     }
 
@@ -94,6 +90,7 @@ public class FloatingButton : Form
         {
             _dragging = false;
             if (!_moved) Display.Toggle();
+            Opacity = IdleOpacity;
         }
         base.OnMouseUp(e);
     }
