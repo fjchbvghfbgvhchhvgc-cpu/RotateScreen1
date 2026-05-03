@@ -7,8 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>RotateScreen</RootNamespace>
     <AssemblyName>RotateScreen</AssemblyName>
-    <UseWindowsForms>false</UseWindowsForms>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
 
 </Project>
