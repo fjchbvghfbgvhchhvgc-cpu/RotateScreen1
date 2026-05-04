@@ -82,7 +82,7 @@ internal static class Display
     public static void Toggle()
     {
         int cur = GetOrientation();
-        int next = (cur == DMDO_DEFAULT || cur == DMDO_180) ? DMDO_90 : DMDO_DEFAULT;
+        int next = (cur == DMDO_DEFAULT || cur == DMDO_180) ? DMDO_270 : DMDO_DEFAULT;
         RotateTo(next);
     }
 }

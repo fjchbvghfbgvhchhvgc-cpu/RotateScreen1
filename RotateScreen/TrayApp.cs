@@ -46,7 +46,13 @@ public class TrayApp : ApplicationContext
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.Transparent);
-            GlyphRenderer.Draw(g, new RectangleF(0, 0, 32, 32), Color.White, 2.6f);
+
+            // Solid black disc
+            using (var bg = new SolidBrush(Color.Black))
+                g.FillEllipse(bg, 0, 0, 32, 32);
+
+            // White rotate glyph
+            GlyphRenderer.Draw(g, new RectangleF(4, 4, 24, 24), Color.White, 2.2f);
         }
 
         IntPtr h = bmp.GetHicon();
