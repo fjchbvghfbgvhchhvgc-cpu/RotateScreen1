@@ -1,7 +1,6 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Text;
 using System.Windows.Forms;
 
 namespace RotateScreen;
@@ -14,6 +13,8 @@ public class FloatingButton : Form
     private Point _dragStart;
     private bool _dragging;
     private bool _moved;
+
+    public Action? ExitRequested;
 
     public FloatingButton()
     {
@@ -33,6 +34,10 @@ public class FloatingButton : Form
         path.AddEllipse(0, 0, Width, Height);
         Region = new Region(path);
 
+        var menu = new ContextMenuStrip();
+        menu.Items.Add("退出 / Exit", null, (_, _) => ExitRequested?.Invoke());
+        ContextMenuStrip = menu;
+
         MouseEnter += (_, _) => Opacity = HoverOpacity;
         MouseLeave += (_, _) => { if (!_dragging) Opacity = IdleOpacity; };
     }
@@ -40,24 +45,14 @@ public class FloatingButton : Form
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics;
-        g.SmoothingMode = SmoothingMode.AntiAlias;
-        g.TextRenderingHint = TextRenderingHint.AntiAlias;
 
-        var rect = new Rectangle(0, 0, Width, Height);
-
+        // Dark translucent disc background
         using (var bg = new SolidBrush(Color.FromArgb(36, 36, 36)))
-            g.FillEllipse(bg, rect);
+            g.FillEllipse(bg, 0, 0, Width, Height);
 
-        using (var ring = new Pen(Color.FromArgb(180, 255, 255, 255), 1.4f))
-            g.DrawEllipse(ring, 1, 1, Width - 3, Height - 3);
-
-        using var font = new Font("Segoe UI Symbol", 24f, FontStyle.Bold, GraphicsUnit.Pixel);
-        const string glyph = "⟳";
-        var sz = g.MeasureString(glyph, font);
-        using var text = new SolidBrush(Color.White);
-        g.DrawString(glyph, font, text,
-            (Width  - sz.Width)  / 2f,
-            (Height - sz.Height) / 2f - 1);
+        // Rotate glyph (ring + dot + arrow) in white
+        var inner = new RectangleF(7, 7, Width - 14, Height - 14);
+        GlyphRenderer.Draw(g, inner, Color.White, 2.2f);
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
@@ -65,8 +60,8 @@ public class FloatingButton : Form
         if (e.Button == MouseButtons.Left)
         {
             _dragStart = e.Location;
-            _dragging = true;
-            _moved = false;
+            _dragging  = true;
+            _moved     = false;
         }
         base.OnMouseDown(e);
     }
